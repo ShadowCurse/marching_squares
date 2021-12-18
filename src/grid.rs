@@ -67,143 +67,49 @@ impl Grid {
                 match iso_value {
                     0 => {}
                     1 => {
-                        self.corner(
-                            &mut vertices,
-                            &mut indices,
-                            c,
-                            d,
-                            a,
-                        );
+                        self.corner(&mut vertices, &mut indices, c, d, a);
                     }
                     2 => {
-                        self.corner(
-                            &mut vertices,
-                            &mut indices,
-                            b,
-                            c,
-                            d,
-                        );
+                        self.corner(&mut vertices, &mut indices, b, c, d);
                     }
                     4 => {
-                        self.corner(
-                            &mut vertices,
-                            &mut indices,
-                            a,
-                            b,
-                            c,
-                        );
+                        self.corner(&mut vertices, &mut indices, a, b, c);
                     }
                     8 => {
-                        self.corner(
-                            &mut vertices,
-                            &mut indices,
-                            d,
-                            a,
-                            b,
-                        );
+                        self.corner(&mut vertices, &mut indices, d, a, b);
                     }
 
                     7 => {
-                        self.no_corner(
-                            &mut vertices,
-                            &mut indices,
-                            a,
-                            b,
-                            c,
-                            d,
-                        );
+                        self.no_corner(&mut vertices, &mut indices, a, b, c, d);
                     }
                     11 => {
-                        self.no_corner(
-                            &mut vertices,
-                            &mut indices,
-                            b,
-                            c,
-                            d,
-                            a,
-                        );
+                        self.no_corner(&mut vertices, &mut indices, b, c, d, a);
                     }
                     13 => {
-                        self.no_corner(
-                            &mut vertices,
-                            &mut indices,
-                            c,
-                            d,
-                            a,
-                            b,
-                        );
+                        self.no_corner(&mut vertices, &mut indices, c, d, a, b);
                     }
                     14 => {
-                        self.no_corner(
-                            &mut vertices,
-                            &mut indices,
-                            d,
-                            a,
-                            b,
-                            c,
-                        );
+                        self.no_corner(&mut vertices, &mut indices, d, a, b, c);
                     }
 
                     3 => {
-                        self.split(
-                            &mut vertices,
-                            &mut indices,
-                            a,
-                            b,
-                            c,
-                            d,
-                        );
+                        self.split(&mut vertices, &mut indices, a, b, c, d);
                     }
                     6 => {
-                        self.split(
-                            &mut vertices,
-                            &mut indices,
-                            d,
-                            a,
-                            b,
-                            c,
-                        );
+                        self.split(&mut vertices, &mut indices, d, a, b, c);
                     }
                     9 => {
-                        self.split(
-                            &mut vertices,
-                            &mut indices,
-                            b,
-                            c,
-                            d,
-                            a,
-                        );
+                        self.split(&mut vertices, &mut indices, b, c, d, a);
                     }
                     12 => {
-                        self.split(
-                            &mut vertices,
-                            &mut indices,
-                            c,
-                            d,
-                            a,
-                            b,
-                        );
+                        self.split(&mut vertices, &mut indices, c, d, a, b);
                     }
 
                     5 => {
-                        self.diagonal(
-                            &mut vertices,
-                            &mut indices,
-                            a,
-                            b,
-                            c,
-                            d,
-                        );
+                        self.diagonal(&mut vertices, &mut indices, a, b, c, d);
                     }
                     10 => {
-                        self.diagonal(
-                            &mut vertices,
-                            &mut indices,
-                            b,
-                            c,
-                            d,
-                            a,
-                        );
+                        self.diagonal(&mut vertices, &mut indices, b, c, d, a);
                     }
 
                     15 => {
