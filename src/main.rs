@@ -1,7 +1,10 @@
 use bevy::prelude::*;
 
 mod grid;
+mod metaballs;
+
 use grid::*;
+use metaballs::*;
 
 fn main() {
     App::build()
@@ -12,26 +15,6 @@ fn main() {
         .run();
 }
 
-struct Ball {
-    pos: Vec2,
-    radius: f32,
-    velocity: Vec2,
-}
-
-impl Ball {
-    pub fn calc(&self, x: f32, y: f32) -> f32 {
-        self.radius.powi(2) / ((self.pos.x - x).powi(2) + (self.pos.y - y).powi(2))
-    }
-}
-
-struct Metabals {
-    balls: Vec<Ball>,
-}
-
-pub struct GridMesh {
-    mesh: Handle<Mesh>,
-}
-
 fn setup(
     mut commands: Commands,
     mut color_materials: ResMut<Assets<ColorMaterial>>,
@@ -40,8 +23,8 @@ fn setup(
 ) {
     commands.spawn_bundle(OrthographicCameraBundle::new_2d());
 
-    let sprite_size = 1.0;
-    let grid_size = 1000;
+    let sprite_size = 5.0;
+    let grid_size = 50;
     let threshold = 0.1;
 
     let balls = Metabals {
@@ -69,16 +52,8 @@ fn setup(
         ],
     };
 
-    let f = |x: f32, y: f32| {
-        let mut out = 0.0;
-        for ball in balls.balls.iter() {
-            out += ball.calc(x, y);
-        }
-        out
-    };
-
-    let mut grid = Grid::new(grid_size, sprite_size * 2.);
-    let mesh = grid.create_mesh(&f, threshold);
+    let mut grid = Grid::new(grid_size, sprite_size * 2.0, threshold);
+    let mesh = grid.create_mesh(&|x, y| balls.calc(x, y), threshold);
 
     // for (p, v) in grid.positions.iter().zip(grid.values_normalize.iter()) {
     //     let color = if *v { Color::BLACK } else { Color::WHITE };
@@ -108,35 +83,4 @@ fn setup(
         transform: Transform::from_translation(Vec3::new(0.0, 0.0, 0.0)),
         ..Default::default()
     });
-}
-
-fn update_balls(mut balls: ResMut<Metabals>) {
-    for b in balls.balls.iter_mut() {
-        b.pos += b.velocity;
-        if b.pos.x > 200.0 || b.pos.x < -200.0 {
-            b.velocity.x *= -1.0;
-        }
-        if b.pos.y > 200.0 || b.pos.y < -200.0 {
-            b.velocity.y *= -1.0;
-        }
-    }
-}
-
-fn update_mesh(
-    mut grid: ResMut<Grid>,
-    balls: Res<Metabals>,
-    grid_mesh: ResMut<GridMesh>,
-    mut meshes: ResMut<Assets<Mesh>>,
-) {
-    let f = |x: f32, y: f32| {
-        let mut out = 0.0;
-        for ball in balls.balls.iter() {
-            out += ball.calc(x, y);
-        }
-        out
-    };
-    let threshold = 0.1;
-    if let Some(m) = meshes.get_mut(&grid_mesh.mesh) {
-        *m = grid.create_mesh(&f, threshold);
-    }
 }

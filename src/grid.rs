@@ -1,18 +1,36 @@
-use bevy::math::Vec3;
+use bevy::prelude::*;
 use bevy::render::{
     mesh::{Indices, Mesh},
     pipeline::PrimitiveTopology,
 };
 
+use crate::metaballs::Metabals;
+
+pub struct GridMesh {
+    mesh: Handle<Mesh>,
+}
+
+pub fn update_mesh(
+    mut grid: ResMut<Grid>,
+    balls: Res<Metabals>,
+    grid_mesh: ResMut<GridMesh>,
+    mut meshes: ResMut<Assets<Mesh>>,
+) {
+    if let Some(m) = meshes.get_mut(&grid_mesh.mesh) {
+        *m = grid.create_mesh(&|x, y| balls.calc(x, y));
+    }
+}
+
 pub struct Grid {
     pub size: u32,
+    pub threshold: f32,
     pub positions: Vec<Vec3>,
     pub values: Vec<f32>,
     pub values_normalize: Vec<bool>,
 }
 
 impl Grid {
-    pub fn new(size: u32, spacing: f32) -> Self {
+    pub fn new(size: u32, spacing: f32, threshold: f32) -> Self {
         let half_size = (size / 2) as i32;
 
         let mut positions = Vec::with_capacity(size.pow(2) as usize);
@@ -30,17 +48,18 @@ impl Grid {
 
         Self {
             size,
+            threshold,
             positions,
             values,
             values_normalize,
         }
     }
 
-    pub fn create_mesh(&mut self, f: &impl Fn(f32, f32) -> f32, threshold: f32) -> Mesh {
+    pub fn create_mesh(&mut self, f: &impl Fn(f32, f32) -> f32) -> Mesh {
         for (i, pos) in self.positions.iter().enumerate() {
             let val = f(pos[0], pos[1]);
             self.values[i] = val;
-            self.values_normalize[i] = val > threshold;
+            self.values_normalize[i] = val > self.threshold;
         }
 
         let mut vertices = vec![];
@@ -333,3 +352,4 @@ impl Grid {
         ]);
     }
 }
+
