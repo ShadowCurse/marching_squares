@@ -162,20 +162,16 @@ impl Grid {
         let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
         mesh.set_attribute(
             Mesh::ATTRIBUTE_POSITION,
-            // vec![[-1.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]],
             vertices,
         );
         mesh.set_attribute(
             Mesh::ATTRIBUTE_NORMAL,
-            // vec![[0.0, 0.0, 1.0], [0.0, 0.0, 1.0], [0.0, 0.0, 1.0]],
             vec![[0.0, 0.0, 1.0]; indices.len()],
         );
         mesh.set_attribute(
             Mesh::ATTRIBUTE_UV_0,
-            // vec![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0]],
             vec![[0.0, 0.0]; indices.len()],
         );
-        // mesh.set_indices(Some(Indices::U32(vec![0, 1, 2])));
         mesh.set_indices(Some(Indices::U32(indices)));
         mesh
     }
