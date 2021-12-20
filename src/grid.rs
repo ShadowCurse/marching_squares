@@ -4,24 +4,42 @@ use bevy::render::{
     pipeline::PrimitiveTopology,
 };
 
-use crate::metaballs::Metabals;
+use crate::metaballs::*;
 
-pub struct GridMesh {
-    mesh: Handle<Mesh>,
+pub fn setup(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut standart_materials: ResMut<Assets<StandardMaterial>>,
+) {
+    let spacing = 5.0;
+    let grid_size = 200;
+    let threshold = 0.1;
+
+    let h = meshes.add(Mesh::new(PrimitiveTopology::TriangleList));
+    let grid = Grid::new(grid_size, spacing, threshold, h.clone());
+    commands.insert_resource(grid);
+    commands.spawn_bundle(PbrBundle {
+        material: standart_materials.add(Color::GREEN.into()),
+        mesh: h,
+        ..Default::default()
+    });
 }
 
 pub fn update_mesh(
     mut grid: ResMut<Grid>,
-    balls: Res<Metabals>,
-    grid_mesh: ResMut<GridMesh>,
     mut meshes: ResMut<Assets<Mesh>>,
+    q: Query<(&Position, &Radius), With<Ball>>,
 ) {
-    if let Some(m) = meshes.get_mut(&grid_mesh.mesh) {
-        *m = grid.create_mesh(&|x, y| balls.calc(x, y));
+    if let Some(m) = meshes.get_mut(&grid.mesh) {
+        *m = grid.create_mesh(&|x, y| {
+            q.iter()
+                .fold(0.0, |sum, (p, r)| sum + Ball::calc(&p.pos, r.r, x, y))
+        });
     }
 }
 
 pub struct Grid {
+    pub mesh: Handle<Mesh>,
     pub size: u32,
     pub threshold: f32,
     pub positions: Vec<Vec3>,
@@ -30,7 +48,7 @@ pub struct Grid {
 }
 
 impl Grid {
-    pub fn new(size: u32, spacing: f32, threshold: f32) -> Self {
+    pub fn new(size: u32, spacing: f32, threshold: f32, mesh: Handle<Mesh>) -> Self {
         let half_size = (size / 2) as i32;
 
         let mut positions = Vec::with_capacity(size.pow(2) as usize);
@@ -47,6 +65,7 @@ impl Grid {
         let values_normalize = vec![false; size.pow(2) as usize];
 
         Self {
+            mesh,
             size,
             threshold,
             positions,
@@ -352,4 +371,3 @@ impl Grid {
         ]);
     }
 }
-
