@@ -11,15 +11,21 @@ pub fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut standart_materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    let spacing = 5.0;
+    let spacing = 0.5;
     let width = 200;
     let height = 200;
 
     let grid = Grid::new(width, height, spacing);
     commands.insert_resource(grid);
 
-    let thresholds = [0.2, 0.1, 0.05];
-    let colors = [Color::ORANGE, Color::GREEN, Color::BLUE];
+    let thresholds = [0.2, 0.1, 0.05, 0.04, 0.03];
+    let colors = [
+        Color::ORANGE,
+        Color::GREEN,
+        Color::BLUE,
+        Color::CYAN,
+        Color::TEAL,
+    ];
 
     for (i, (t, c)) in thresholds
         .into_iter()

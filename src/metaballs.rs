@@ -1,3 +1,4 @@
+use crate::grid::Grid;
 use bevy::prelude::*;
 
 pub struct Ball;
@@ -16,9 +17,9 @@ pub fn setup(mut commands: Commands) {
         .spawn()
         .insert(Ball)
         .insert(Position {
-            pos: Vec2::new(-200.0, 0.0),
+            pos: Vec2::new(-20.0, 0.0),
         })
-        .insert(Radius { r: 30.0 })
+        .insert(Radius { r: 5.0 })
         .insert(Veclocity {
             vel: Vec2::new(1.0, 2.0),
         });
@@ -26,22 +27,22 @@ pub fn setup(mut commands: Commands) {
         .spawn()
         .insert(Ball)
         .insert(Position {
-            pos: Vec2::new(200.0, 0.0),
+            pos: Vec2::new(20.0, 0.0),
         })
-        .insert(Radius { r: 20.0 })
+        .insert(Radius { r: 2.0 })
         .insert(Veclocity {
-            vel: Vec2::new(2.0, 4.0),
+            vel: Vec2::new(-2.0, 4.0),
         });
-    // commands
-    //     .spawn()
-    //     .insert(Ball)
-    //     .insert(Position {
-    //         pos: Vec2::new(20.0, 20.0),
-    //     })
-    //     .insert(Radius { r: 10.0 })
-    //     .insert(Veclocity {
-    //         vel: Vec2::new(3.0, 6.0),
-    //     });
+    commands
+        .spawn()
+        .insert(Ball)
+        .insert(Position {
+            pos: Vec2::new(20.0, 20.0),
+        })
+        .insert(Radius { r: 3.0 })
+        .insert(Veclocity {
+            vel: Vec2::new(3.0, 3.0),
+        });
     // commands
     //     .spawn()
     //     .insert(Ball)
@@ -74,13 +75,15 @@ pub fn setup(mut commands: Commands) {
     //     });
 }
 
-pub fn update_balls(mut q: Query<(&mut Position, &mut Veclocity), With<Ball>>) {
+pub fn update_balls(grid: Res<Grid>, mut q: Query<(&mut Position, &mut Veclocity), With<Ball>>) {
+    let half_width = grid.width as f32 * grid.spacing * 0.5;
+    let half_height = grid.height as f32 * grid.spacing * 0.5;
     for (mut pos, mut vel) in q.iter_mut() {
         pos.pos += vel.vel;
-        if pos.pos.x > 500.0 || pos.pos.x < -500.0 {
+        if pos.pos.x > half_width || pos.pos.x < -half_width {
             vel.vel.x *= -1.0;
         }
-        if pos.pos.y > 500.0 || pos.pos.y < -500.0 {
+        if pos.pos.y > half_height || pos.pos.y < -half_height {
             vel.vel.y *= -1.0;
         }
     }
