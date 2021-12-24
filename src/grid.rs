@@ -19,7 +19,7 @@ pub fn setup(
     let grid = Grid::new(width, height, spacing);
     commands.insert_resource(grid);
 
-    let thresholds = [0.2];//, 0.1, 0.05, 0.04, 0.03];
+    let thresholds = [0.2]; //, 0.1, 0.05, 0.04, 0.03];
     let colors = [
         Color::ORANGE,
         // Color::GREEN,
@@ -107,6 +107,7 @@ impl Grid {
         }
     }
 }
+#[derive(Debug)]
 struct CmpVec3(Vec3);
 impl CmpVec3 {
     fn new(vec: Vec3) -> Self {
@@ -124,11 +125,11 @@ impl PartialOrd<CmpVec3> for CmpVec3 {
         if self.eq(&other) {
             Some(std::cmp::Ordering::Equal)
         } else {
-            if self.0.x > self.0.x {
+            if self.0.x > other.0.x {
                 Some(std::cmp::Ordering::Greater)
-            } else if self.0.y > self.0.y {
+            } else if self.0.y > other.0.y {
                 Some(std::cmp::Ordering::Greater)
-            } else if self.0.z > self.0.z {
+            } else if self.0.z > other.0.z {
                 Some(std::cmp::Ordering::Greater)
             } else {
                 Some(std::cmp::Ordering::Less)
@@ -359,13 +360,12 @@ impl GridLayer {
                     }
 
                     _ => unreachable!(),
-                    // _ => {},
                 }
             }
         }
-        println!("vertices count: {}", vertices.len());
-        println!("indices count: {}", indices.len());
-        println!("vertex_index count: {}", vertex_index.len());
+        // println!("vertices: {:#?}", vertices.len());
+        // println!("indices: {:#?}", indices.len());
+        // println!("vertex_index: {:#?}", vertex_index.len());
 
         let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
         mesh.set_attribute(
@@ -392,7 +392,7 @@ impl GridLayer {
                 indices.push(*i);
             } else {
                 vertices.push(*v.as_ref());
-                let i = indices.len() as u32 - 1;
+                let i = vertices.len() as u32 - 1;
                 indices.push(i);
                 vertex_index.insert(cv, i);
             }
@@ -425,14 +425,6 @@ impl GridLayer {
             indices,
             vertex_index,
         );
-
-        // vertices.extend([
-        //     intersection_2.as_ref(),
-        //     pos_2.as_ref(),
-        //     intersection_1.as_ref(),
-        // ]);
-        // let last_index = indices.len() as u32;
-        // indices.extend([last_index, last_index + 1, last_index + 2]);
     }
 
     fn no_corner(
@@ -475,30 +467,6 @@ impl GridLayer {
             indices,
             vertex_index,
         );
-
-        // vertices.extend([
-        //     intersection_2.as_ref(),
-        //     pos_4.as_ref(),
-        //     pos_3.as_ref(),
-        //     intersection_1.as_ref(),
-        //     intersection_2.as_ref(),
-        //     pos_3.as_ref(),
-        //     pos_2.as_ref(),
-        //     intersection_1.as_ref(),
-        //     pos_3.as_ref(),
-        // ]);
-        // let last_index = indices.len() as u32;
-        // indices.extend([
-        //     last_index,
-        //     last_index + 1,
-        //     last_index + 2,
-        //     last_index + 3,
-        //     last_index + 4,
-        //     last_index + 5,
-        //     last_index + 6,
-        //     last_index + 7,
-        //     last_index + 8,
-        // ]);
     }
 
     fn split(
@@ -536,24 +504,6 @@ impl GridLayer {
             indices,
             vertex_index,
         );
-
-        // vertices.extend([
-        //     intersection_1.as_ref(),
-        //     pos_4.as_ref(),
-        //     pos_3.as_ref(),
-        //     intersection_2.as_ref(),
-        //     intersection_1.as_ref(),
-        //     pos_3.as_ref(),
-        // ]);
-        // let last_index = indices.len() as u32;
-        // indices.extend([
-        //     last_index,
-        //     last_index + 1,
-        //     last_index + 2,
-        //     last_index + 3,
-        //     last_index + 4,
-        //     last_index + 5,
-        // ]);
     }
 
     fn diagonal(
@@ -593,24 +543,6 @@ impl GridLayer {
             indices,
             vertex_index,
         );
-
-        // vertices.extend([
-        //     intersection_4.as_ref(),
-        //     pos_4.as_ref(),
-        //     intersection_3.as_ref(),
-        //     intersection_1.as_ref(),
-        //     intersection_2.as_ref(),
-        //     pos_2.as_ref(),
-        // ]);
-        // let last_index = indices.len() as u32;
-        // indices.extend([
-        //     last_index,
-        //     last_index + 1,
-        //     last_index + 2,
-        //     last_index + 3,
-        //     last_index + 4,
-        //     last_index + 5,
-        // ]);
     }
 
     fn square(
@@ -630,23 +562,5 @@ impl GridLayer {
 
         Self::insert_vertices([&pos_1, &pos_4, &pos_3], vertices, indices, vertex_index);
         Self::insert_vertices([&pos_2, &pos_1, &pos_3], vertices, indices, vertex_index);
-
-        // vertices.extend([
-        //     pos_1.as_ref(),
-        //     pos_4.as_ref(),
-        //     pos_3.as_ref(),
-        //     pos_2.as_ref(),
-        //     pos_1.as_ref(),
-        //     pos_3.as_ref(),
-        // ]);
-        // let last_index = indices.len() as u32;
-        // indices.extend([
-        //     last_index,
-        //     last_index + 1,
-        //     last_index + 2,
-        //     last_index + 3,
-        //     last_index + 4,
-        //     last_index + 5,
-        // ]);
     }
 }
