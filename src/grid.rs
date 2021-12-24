@@ -3,6 +3,7 @@ use bevy::render::{
     mesh::{Indices, Mesh},
     pipeline::PrimitiveTopology,
 };
+use std::collections::BTreeMap;
 
 use crate::metaballs::*;
 
@@ -18,13 +19,13 @@ pub fn setup(
     let grid = Grid::new(width, height, spacing);
     commands.insert_resource(grid);
 
-    let thresholds = [0.2, 0.1, 0.05, 0.04, 0.03];
+    let thresholds = [0.2];//, 0.1, 0.05, 0.04, 0.03];
     let colors = [
         Color::ORANGE,
-        Color::GREEN,
-        Color::BLUE,
-        Color::CYAN,
-        Color::TEAL,
+        // Color::GREEN,
+        // Color::BLUE,
+        // Color::CYAN,
+        // Color::TEAL,
     ];
 
     for (i, (t, c)) in thresholds
@@ -37,7 +38,7 @@ pub fn setup(
             .spawn_bundle(PbrBundle {
                 material: standart_materials.add(c.into()),
                 mesh: meshes.add(Mesh::new(PrimitiveTopology::TriangleList)),
-                transform: Transform::from_translation(Vec3::new(0.0, 0.0, 10.0 * i as f32)),
+                transform: Transform::from_translation(Vec3::new(0.0, 0.0, 5.0 * i as f32)),
                 ..Default::default()
             })
             .insert(GridLayer {
@@ -64,7 +65,6 @@ pub fn update_mesh(
 }
 
 pub struct GridLayer {
-    // pub mesh: Handle<Mesh>,
     pub threshold: f32,
     pub values_normalize: Vec<bool>,
 }
@@ -107,6 +107,41 @@ impl Grid {
         }
     }
 }
+struct CmpVec3(Vec3);
+impl CmpVec3 {
+    fn new(vec: Vec3) -> Self {
+        Self(vec)
+    }
+}
+impl PartialEq<CmpVec3> for CmpVec3 {
+    fn eq(&self, other: &CmpVec3) -> bool {
+        self.0.eq(&other.0)
+    }
+}
+impl Eq for CmpVec3 {}
+impl PartialOrd<CmpVec3> for CmpVec3 {
+    fn partial_cmp(&self, other: &CmpVec3) -> Option<std::cmp::Ordering> {
+        if self.eq(&other) {
+            Some(std::cmp::Ordering::Equal)
+        } else {
+            if self.0.x > self.0.x {
+                Some(std::cmp::Ordering::Greater)
+            } else if self.0.y > self.0.y {
+                Some(std::cmp::Ordering::Greater)
+            } else if self.0.z > self.0.z {
+                Some(std::cmp::Ordering::Greater)
+            } else {
+                Some(std::cmp::Ordering::Less)
+            }
+        }
+    }
+}
+impl Ord for CmpVec3 {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.partial_cmp(other).unwrap()
+    }
+}
+
 impl GridLayer {
     pub fn update(
         &mut self,
@@ -118,6 +153,7 @@ impl GridLayer {
             self.values_normalize[i] = val > &self.threshold;
         }
 
+        let mut vertex_index = BTreeMap::<CmpVec3, u32>::new();
         let mut vertices = vec![];
         let mut indices = vec![];
 
@@ -142,75 +178,232 @@ impl GridLayer {
                 match iso_value {
                     0 => {}
                     1 => {
-                        self.corner(grid, &mut vertices, &mut indices, c, d, a);
+                        Self::corner(
+                            grid,
+                            &mut vertices,
+                            &mut indices,
+                            &mut vertex_index,
+                            c,
+                            d,
+                            a,
+                        );
                     }
                     2 => {
-                        self.corner(grid, &mut vertices, &mut indices, b, c, d);
+                        Self::corner(
+                            grid,
+                            &mut vertices,
+                            &mut indices,
+                            &mut vertex_index,
+                            b,
+                            c,
+                            d,
+                        );
                     }
                     4 => {
-                        self.corner(grid, &mut vertices, &mut indices, a, b, c);
+                        Self::corner(
+                            grid,
+                            &mut vertices,
+                            &mut indices,
+                            &mut vertex_index,
+                            a,
+                            b,
+                            c,
+                        );
                     }
                     8 => {
-                        self.corner(grid, &mut vertices, &mut indices, d, a, b);
+                        Self::corner(
+                            grid,
+                            &mut vertices,
+                            &mut indices,
+                            &mut vertex_index,
+                            d,
+                            a,
+                            b,
+                        );
                     }
 
                     7 => {
-                        self.no_corner(grid, &mut vertices, &mut indices, a, b, c, d);
+                        Self::no_corner(
+                            grid,
+                            &mut vertices,
+                            &mut indices,
+                            &mut vertex_index,
+                            a,
+                            b,
+                            c,
+                            d,
+                        );
                     }
                     11 => {
-                        self.no_corner(grid, &mut vertices, &mut indices, b, c, d, a);
+                        Self::no_corner(
+                            grid,
+                            &mut vertices,
+                            &mut indices,
+                            &mut vertex_index,
+                            b,
+                            c,
+                            d,
+                            a,
+                        );
                     }
                     13 => {
-                        self.no_corner(grid, &mut vertices, &mut indices, c, d, a, b);
+                        Self::no_corner(
+                            grid,
+                            &mut vertices,
+                            &mut indices,
+                            &mut vertex_index,
+                            c,
+                            d,
+                            a,
+                            b,
+                        );
                     }
                     14 => {
-                        self.no_corner(grid, &mut vertices, &mut indices, d, a, b, c);
+                        Self::no_corner(
+                            grid,
+                            &mut vertices,
+                            &mut indices,
+                            &mut vertex_index,
+                            d,
+                            a,
+                            b,
+                            c,
+                        );
                     }
 
                     3 => {
-                        self.split(grid, &mut vertices, &mut indices, a, b, c, d);
+                        Self::split(
+                            grid,
+                            &mut vertices,
+                            &mut indices,
+                            &mut vertex_index,
+                            a,
+                            b,
+                            c,
+                            d,
+                        );
                     }
                     6 => {
-                        self.split(grid, &mut vertices, &mut indices, d, a, b, c);
+                        Self::split(
+                            grid,
+                            &mut vertices,
+                            &mut indices,
+                            &mut vertex_index,
+                            d,
+                            a,
+                            b,
+                            c,
+                        );
                     }
                     9 => {
-                        self.split(grid, &mut vertices, &mut indices, b, c, d, a);
+                        Self::split(
+                            grid,
+                            &mut vertices,
+                            &mut indices,
+                            &mut vertex_index,
+                            b,
+                            c,
+                            d,
+                            a,
+                        );
                     }
                     12 => {
-                        self.split(grid, &mut vertices, &mut indices, c, d, a, b);
+                        Self::split(
+                            grid,
+                            &mut vertices,
+                            &mut indices,
+                            &mut vertex_index,
+                            c,
+                            d,
+                            a,
+                            b,
+                        );
                     }
 
                     5 => {
-                        self.diagonal(grid, &mut vertices, &mut indices, a, b, c, d);
+                        Self::diagonal(
+                            grid,
+                            &mut vertices,
+                            &mut indices,
+                            &mut vertex_index,
+                            a,
+                            b,
+                            c,
+                            d,
+                        );
                     }
                     10 => {
-                        self.diagonal(grid, &mut vertices, &mut indices, b, c, d, a);
+                        Self::diagonal(
+                            grid,
+                            &mut vertices,
+                            &mut indices,
+                            &mut vertex_index,
+                            b,
+                            c,
+                            d,
+                            a,
+                        );
                     }
 
                     15 => {
-                        self.square(grid, &mut vertices, &mut indices, a, b, c, d);
+                        Self::square(
+                            grid,
+                            &mut vertices,
+                            &mut indices,
+                            &mut vertex_index,
+                            a,
+                            b,
+                            c,
+                            d,
+                        );
                     }
 
                     _ => unreachable!(),
+                    // _ => {},
                 }
             }
         }
+        println!("vertices count: {}", vertices.len());
+        println!("indices count: {}", indices.len());
+        println!("vertex_index count: {}", vertex_index.len());
 
         let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
+        mesh.set_attribute(
+            Mesh::ATTRIBUTE_NORMAL,
+            vec![[0.0, 0.0, 1.0]; vertices.len()],
+        );
+        mesh.set_attribute(Mesh::ATTRIBUTE_UV_0, vec![[0.0, 0.0]; vertices.len()]);
         mesh.set_attribute(Mesh::ATTRIBUTE_POSITION, vertices);
-        mesh.set_attribute(Mesh::ATTRIBUTE_NORMAL, vec![[0.0, 0.0, 1.0]; indices.len()]);
-        mesh.set_attribute(Mesh::ATTRIBUTE_UV_0, vec![[0.0, 0.0]; indices.len()]);
         mesh.set_indices(Some(Indices::U32(indices)));
         if let Some(m) = meshes.get_mut(&mesh_handle) {
             *m = mesh;
         }
     }
 
+    fn insert_vertices(
+        to_insert: [&Vec3; 3],
+        vertices: &mut Vec<[f32; 3]>,
+        indices: &mut Vec<u32>,
+        vertex_index: &mut BTreeMap<CmpVec3, u32>,
+    ) {
+        for v in to_insert {
+            let cv = CmpVec3::new(*v);
+            if let Some(i) = vertex_index.get(&cv) {
+                indices.push(*i);
+            } else {
+                vertices.push(*v.as_ref());
+                let i = indices.len() as u32 - 1;
+                indices.push(i);
+                vertex_index.insert(cv, i);
+            }
+        }
+    }
+
     fn corner(
-        &self,
         grid: &Grid,
         vertices: &mut Vec<[f32; 3]>,
         indices: &mut Vec<u32>,
+        vertex_index: &mut BTreeMap<CmpVec3, u32>,
         p1: usize,
         p2: usize,
         p3: usize,
@@ -226,20 +419,27 @@ impl GridLayer {
         let intersection_1 = pos_1.lerp(pos_2, val_2 / (val_1 + val_2));
         let intersection_2 = pos_2.lerp(pos_3, val_3 / (val_2 + val_3));
 
-        vertices.extend([
-            intersection_2.as_ref(),
-            pos_2.as_ref(),
-            intersection_1.as_ref(),
-        ]);
-        let last_index = indices.len() as u32;
-        indices.extend([last_index, last_index + 1, last_index + 2]);
+        Self::insert_vertices(
+            [&intersection_2, &pos_2, &intersection_1],
+            vertices,
+            indices,
+            vertex_index,
+        );
+
+        // vertices.extend([
+        //     intersection_2.as_ref(),
+        //     pos_2.as_ref(),
+        //     intersection_1.as_ref(),
+        // ]);
+        // let last_index = indices.len() as u32;
+        // indices.extend([last_index, last_index + 1, last_index + 2]);
     }
 
     fn no_corner(
-        &self,
         grid: &Grid,
         vertices: &mut Vec<[f32; 3]>,
         indices: &mut Vec<u32>,
+        vertex_index: &mut BTreeMap<CmpVec3, u32>,
         p1: usize,
         p2: usize,
         p3: usize,
@@ -257,36 +457,55 @@ impl GridLayer {
         let intersection_1 = pos_1.lerp(pos_2, val_2 / (val_1 + val_2));
         let intersection_2 = pos_1.lerp(pos_4, val_4 / (val_1 + val_4));
 
-        vertices.extend([
-            intersection_2.as_ref(),
-            pos_4.as_ref(),
-            pos_3.as_ref(),
-            intersection_1.as_ref(),
-            intersection_2.as_ref(),
-            pos_3.as_ref(),
-            pos_2.as_ref(),
-            intersection_1.as_ref(),
-            pos_3.as_ref(),
-        ]);
-        let last_index = indices.len() as u32;
-        indices.extend([
-            last_index,
-            last_index + 1,
-            last_index + 2,
-            last_index + 3,
-            last_index + 4,
-            last_index + 5,
-            last_index + 6,
-            last_index + 7,
-            last_index + 8,
-        ]);
+        Self::insert_vertices(
+            [&intersection_2, &pos_4, &pos_3],
+            vertices,
+            indices,
+            vertex_index,
+        );
+        Self::insert_vertices(
+            [&intersection_1, &intersection_2, &pos_3],
+            vertices,
+            indices,
+            vertex_index,
+        );
+        Self::insert_vertices(
+            [&pos_2, &intersection_1, &pos_3],
+            vertices,
+            indices,
+            vertex_index,
+        );
+
+        // vertices.extend([
+        //     intersection_2.as_ref(),
+        //     pos_4.as_ref(),
+        //     pos_3.as_ref(),
+        //     intersection_1.as_ref(),
+        //     intersection_2.as_ref(),
+        //     pos_3.as_ref(),
+        //     pos_2.as_ref(),
+        //     intersection_1.as_ref(),
+        //     pos_3.as_ref(),
+        // ]);
+        // let last_index = indices.len() as u32;
+        // indices.extend([
+        //     last_index,
+        //     last_index + 1,
+        //     last_index + 2,
+        //     last_index + 3,
+        //     last_index + 4,
+        //     last_index + 5,
+        //     last_index + 6,
+        //     last_index + 7,
+        //     last_index + 8,
+        // ]);
     }
 
     fn split(
-        &self,
         grid: &Grid,
         vertices: &mut Vec<[f32; 3]>,
         indices: &mut Vec<u32>,
+        vertex_index: &mut BTreeMap<CmpVec3, u32>,
         p1: usize,
         p2: usize,
         p3: usize,
@@ -305,30 +524,43 @@ impl GridLayer {
         let intersection_1 = pos_1.lerp(pos_4, val_4 / (val_1 + val_4));
         let intersection_2 = pos_2.lerp(pos_3, val_3 / (val_2 + val_3));
 
-        vertices.extend([
-            intersection_1.as_ref(),
-            pos_4.as_ref(),
-            pos_3.as_ref(),
-            intersection_2.as_ref(),
-            intersection_1.as_ref(),
-            pos_3.as_ref(),
-        ]);
-        let last_index = indices.len() as u32;
-        indices.extend([
-            last_index,
-            last_index + 1,
-            last_index + 2,
-            last_index + 3,
-            last_index + 4,
-            last_index + 5,
-        ]);
+        Self::insert_vertices(
+            [&intersection_1, &pos_4, &pos_3],
+            vertices,
+            indices,
+            vertex_index,
+        );
+        Self::insert_vertices(
+            [&intersection_2, &intersection_1, &pos_3],
+            vertices,
+            indices,
+            vertex_index,
+        );
+
+        // vertices.extend([
+        //     intersection_1.as_ref(),
+        //     pos_4.as_ref(),
+        //     pos_3.as_ref(),
+        //     intersection_2.as_ref(),
+        //     intersection_1.as_ref(),
+        //     pos_3.as_ref(),
+        // ]);
+        // let last_index = indices.len() as u32;
+        // indices.extend([
+        //     last_index,
+        //     last_index + 1,
+        //     last_index + 2,
+        //     last_index + 3,
+        //     last_index + 4,
+        //     last_index + 5,
+        // ]);
     }
 
     fn diagonal(
-        &self,
         grid: &Grid,
         vertices: &mut Vec<[f32; 3]>,
         indices: &mut Vec<u32>,
+        vertex_index: &mut BTreeMap<CmpVec3, u32>,
         p1: usize,
         p2: usize,
         p3: usize,
@@ -349,30 +581,43 @@ impl GridLayer {
         let intersection_3 = pos_3.lerp(pos_4, val_4 / (val_3 + val_4));
         let intersection_4 = pos_1.lerp(pos_4, val_4 / (val_1 + val_4));
 
-        vertices.extend([
-            intersection_4.as_ref(),
-            pos_4.as_ref(),
-            intersection_3.as_ref(),
-            intersection_1.as_ref(),
-            intersection_2.as_ref(),
-            pos_2.as_ref(),
-        ]);
-        let last_index = indices.len() as u32;
-        indices.extend([
-            last_index,
-            last_index + 1,
-            last_index + 2,
-            last_index + 3,
-            last_index + 4,
-            last_index + 5,
-        ]);
+        Self::insert_vertices(
+            [&intersection_4, &pos_4, &intersection_3],
+            vertices,
+            indices,
+            vertex_index,
+        );
+        Self::insert_vertices(
+            [&intersection_1, &intersection_2, &pos_2],
+            vertices,
+            indices,
+            vertex_index,
+        );
+
+        // vertices.extend([
+        //     intersection_4.as_ref(),
+        //     pos_4.as_ref(),
+        //     intersection_3.as_ref(),
+        //     intersection_1.as_ref(),
+        //     intersection_2.as_ref(),
+        //     pos_2.as_ref(),
+        // ]);
+        // let last_index = indices.len() as u32;
+        // indices.extend([
+        //     last_index,
+        //     last_index + 1,
+        //     last_index + 2,
+        //     last_index + 3,
+        //     last_index + 4,
+        //     last_index + 5,
+        // ]);
     }
 
     fn square(
-        &self,
         grid: &Grid,
         vertices: &mut Vec<[f32; 3]>,
         indices: &mut Vec<u32>,
+        vertex_index: &mut BTreeMap<CmpVec3, u32>,
         p1: usize,
         p2: usize,
         p3: usize,
@@ -383,22 +628,25 @@ impl GridLayer {
         let pos_3 = grid.positions[p3];
         let pos_4 = grid.positions[p4];
 
-        vertices.extend([
-            pos_1.as_ref(),
-            pos_4.as_ref(),
-            pos_3.as_ref(),
-            pos_2.as_ref(),
-            pos_1.as_ref(),
-            pos_3.as_ref(),
-        ]);
-        let last_index = indices.len() as u32;
-        indices.extend([
-            last_index,
-            last_index + 1,
-            last_index + 2,
-            last_index + 3,
-            last_index + 4,
-            last_index + 5,
-        ]);
+        Self::insert_vertices([&pos_1, &pos_4, &pos_3], vertices, indices, vertex_index);
+        Self::insert_vertices([&pos_2, &pos_1, &pos_3], vertices, indices, vertex_index);
+
+        // vertices.extend([
+        //     pos_1.as_ref(),
+        //     pos_4.as_ref(),
+        //     pos_3.as_ref(),
+        //     pos_2.as_ref(),
+        //     pos_1.as_ref(),
+        //     pos_3.as_ref(),
+        // ]);
+        // let last_index = indices.len() as u32;
+        // indices.extend([
+        //     last_index,
+        //     last_index + 1,
+        //     last_index + 2,
+        //     last_index + 3,
+        //     last_index + 4,
+        //     last_index + 5,
+        // ]);
     }
 }
