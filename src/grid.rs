@@ -150,13 +150,16 @@ impl GridLayer {
         mesh_handle: Handle<Mesh>,
         meshes: &mut ResMut<Assets<Mesh>>,
     ) {
-        // for (i, val) in grid.values.iter().enumerate() {
-        //     self.values_normalize[i] = val > &self.threshold;
-        // }
-        for i in 0..grid.width - 40 {
-            self.values_normalize[(i + 50 * grid.width) as usize] = true;
-            self.values_normalize[(i + 51 * grid.width) as usize] = true;
+        for (i, val) in grid.values.iter().enumerate() {
+            self.values_normalize[i] = val > &self.threshold;
         }
+        // for i in 0..grid.width - 40 {
+        //     self.values_normalize[(i + 50 * grid.width) as usize] = true;
+        //     self.values_normalize[(i + 1 + 51 * grid.width) as usize] = true;
+        //     self.values_normalize[(i + 2 + 52 * grid.width) as usize] = true;
+        //     self.values_normalize[(i + 3 + 53 * grid.width) as usize] = true;
+        //     self.values_normalize[(i + 4 + 54 * grid.width) as usize] = true;
+        // }
 
         let mut vertex_index = BTreeMap::<CmpVec3, u32>::new();
         let mut vertices = vec![];
@@ -174,179 +177,176 @@ impl GridLayer {
                 let b = (i + j * grid.width + 1) as usize;
                 let c = (i + (j + 1) * grid.width + 1) as usize;
                 let d = (i + (j + 1) * grid.width) as usize;
-                // if self.calculate_iso(grid, i, j) != 0 {
-                // println!("iso: {}",self.calculate_iso(grid, i, j));
-                // }
 
                 match self.calculate_iso(grid, i, j) {
                     0 => {}
-                    // 1 => {
-                    //     Self::corner(
-                    //         grid,
-                    //         &mut vertices,
-                    //         &mut indices,
-                    //         &mut vertex_index,
-                    //         c,
-                    //         d,
-                    //         a,
-                    //     );
-                    // }
-                    // 2 => {
-                    //     Self::corner(
-                    //         grid,
-                    //         &mut vertices,
-                    //         &mut indices,
-                    //         &mut vertex_index,
-                    //         b,
-                    //         c,
-                    //         d,
-                    //     );
-                    // }
-                    // 4 => {
-                    //     Self::corner(
-                    //         grid,
-                    //         &mut vertices,
-                    //         &mut indices,
-                    //         &mut vertex_index,
-                    //         a,
-                    //         b,
-                    //         c,
-                    //     );
-                    // }
-                    // 8 => {
-                    //     Self::corner(
-                    //         grid,
-                    //         &mut vertices,
-                    //         &mut indices,
-                    //         &mut vertex_index,
-                    //         d,
-                    //         a,
-                    //         b,
-                    //     );
-                    // }
+                    1 => {
+                        Self::corner(
+                            grid,
+                            &mut vertices,
+                            &mut indices,
+                            &mut vertex_index,
+                            c,
+                            d,
+                            a,
+                        );
+                    }
+                    2 => {
+                        Self::corner(
+                            grid,
+                            &mut vertices,
+                            &mut indices,
+                            &mut vertex_index,
+                            b,
+                            c,
+                            d,
+                        );
+                    }
+                    4 => {
+                        Self::corner(
+                            grid,
+                            &mut vertices,
+                            &mut indices,
+                            &mut vertex_index,
+                            a,
+                            b,
+                            c,
+                        );
+                    }
+                    8 => {
+                        Self::corner(
+                            grid,
+                            &mut vertices,
+                            &mut indices,
+                            &mut vertex_index,
+                            d,
+                            a,
+                            b,
+                        );
+                    }
 
-                    // 7 => {
-                    //     Self::no_corner(
-                    //         grid,
-                    //         &mut vertices,
-                    //         &mut indices,
-                    //         &mut vertex_index,
-                    //         a,
-                    //         b,
-                    //         c,
-                    //         d,
-                    //     );
-                    // }
-                    // 11 => {
-                    //     Self::no_corner(
-                    //         grid,
-                    //         &mut vertices,
-                    //         &mut indices,
-                    //         &mut vertex_index,
-                    //         b,
-                    //         c,
-                    //         d,
-                    //         a,
-                    //     );
-                    // }
-                    // 13 => {
-                    //     Self::no_corner(
-                    //         grid,
-                    //         &mut vertices,
-                    //         &mut indices,
-                    //         &mut vertex_index,
-                    //         c,
-                    //         d,
-                    //         a,
-                    //         b,
-                    //     );
-                    // }
-                    // 14 => {
-                    //     Self::no_corner(
-                    //         grid,
-                    //         &mut vertices,
-                    //         &mut indices,
-                    //         &mut vertex_index,
-                    //         d,
-                    //         a,
-                    //         b,
-                    //         c,
-                    //     );
-                    // }
+                    7 => {
+                        Self::no_corner(
+                            grid,
+                            &mut vertices,
+                            &mut indices,
+                            &mut vertex_index,
+                            a,
+                            b,
+                            c,
+                            d,
+                        );
+                    }
+                    11 => {
+                        Self::no_corner(
+                            grid,
+                            &mut vertices,
+                            &mut indices,
+                            &mut vertex_index,
+                            b,
+                            c,
+                            d,
+                            a,
+                        );
+                    }
+                    13 => {
+                        Self::no_corner(
+                            grid,
+                            &mut vertices,
+                            &mut indices,
+                            &mut vertex_index,
+                            c,
+                            d,
+                            a,
+                            b,
+                        );
+                    }
+                    14 => {
+                        Self::no_corner(
+                            grid,
+                            &mut vertices,
+                            &mut indices,
+                            &mut vertex_index,
+                            d,
+                            a,
+                            b,
+                            c,
+                        );
+                    }
 
-                    // 3 => {
-                    //     Self::split(
-                    //         grid,
-                    //         &mut vertices,
-                    //         &mut indices,
-                    //         &mut vertex_index,
-                    //         a,
-                    //         b,
-                    //         c,
-                    //         d,
-                    //     );
-                    // }
-                    // 6 => {
-                    //     Self::split(
-                    //         grid,
-                    //         &mut vertices,
-                    //         &mut indices,
-                    //         &mut vertex_index,
-                    //         d,
-                    //         a,
-                    //         b,
-                    //         c,
-                    //     );
-                    // }
-                    // 9 => {
-                    //     Self::split(
-                    //         grid,
-                    //         &mut vertices,
-                    //         &mut indices,
-                    //         &mut vertex_index,
-                    //         b,
-                    //         c,
-                    //         d,
-                    //         a,
-                    //     );
-                    // }
-                    // 12 => {
-                    //     Self::split(
-                    //         grid,
-                    //         &mut vertices,
-                    //         &mut indices,
-                    //         &mut vertex_index,
-                    //         c,
-                    //         d,
-                    //         a,
-                    //         b,
-                    //     );
-                    // }
+                    3 => {
+                        Self::split(
+                            grid,
+                            &mut vertices,
+                            &mut indices,
+                            &mut vertex_index,
+                            a,
+                            b,
+                            c,
+                            d,
+                        );
+                    }
+                    6 => {
+                        Self::split(
+                            grid,
+                            &mut vertices,
+                            &mut indices,
+                            &mut vertex_index,
+                            d,
+                            a,
+                            b,
+                            c,
+                        );
+                    }
+                    9 => {
+                        Self::split(
+                            grid,
+                            &mut vertices,
+                            &mut indices,
+                            &mut vertex_index,
+                            b,
+                            c,
+                            d,
+                            a,
+                        );
+                    }
+                    12 => {
+                        Self::split(
+                            grid,
+                            &mut vertices,
+                            &mut indices,
+                            &mut vertex_index,
+                            c,
+                            d,
+                            a,
+                            b,
+                        );
+                    }
 
-                    // 5 => {
-                    //     Self::diagonal(
-                    //         grid,
-                    //         &mut vertices,
-                    //         &mut indices,
-                    //         &mut vertex_index,
-                    //         a,
-                    //         b,
-                    //         c,
-                    //         d,
-                    //     );
-                    // }
-                    // 10 => {
-                    //     Self::diagonal(
-                    //         grid,
-                    //         &mut vertices,
-                    //         &mut indices,
-                    //         &mut vertex_index,
-                    //         b,
-                    //         c,
-                    //         d,
-                    //         a,
-                    //     );
-                    // }
+                    5 => {
+                        Self::diagonal(
+                            grid,
+                            &mut vertices,
+                            &mut indices,
+                            &mut vertex_index,
+                            a,
+                            b,
+                            c,
+                            d,
+                        );
+                    }
+                    10 => {
+                        Self::diagonal(
+                            grid,
+                            &mut vertices,
+                            &mut indices,
+                            &mut vertex_index,
+                            b,
+                            c,
+                            d,
+                            a,
+                        );
+                    }
                     15 => {
                         self.square(
                             grid,
@@ -363,9 +363,12 @@ impl GridLayer {
                 }
             }
         }
-        println!("vertices: {:#?}", vertices.len());
-        println!("indices: {:#?}", indices.len());
-        println!("vertex_index: {:#?}", vertex_index.len());
+        // println!("vertices: {:#?}", vertices.len());
+        // println!("indices: {:#?}", indices.len());
+        // println!("vertex_index: {:#?}", vertex_index.len());
+        // println!("vertices: {:#?}", vertices);
+        // println!("indices: {:#?}", indices);
+        // println!("vertex_index: {:#?}", vertex_index);
 
         let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
         mesh.set_attribute(
@@ -545,25 +548,6 @@ impl GridLayer {
         );
     }
 
-    // fn square(
-    //     grid: &Grid,
-    //     vertices: &mut Vec<[f32; 3]>,
-    //     indices: &mut Vec<u32>,
-    //     vertex_index: &mut BTreeMap<CmpVec3, u32>,
-    //     p1: usize,
-    //     p2: usize,
-    //     p3: usize,
-    //     p4: usize,
-    // ) {
-    //     let pos_1 = grid.positions[p1];
-    //     let pos_2 = grid.positions[p2];
-    //     let pos_3 = grid.positions[p3];
-    //     let pos_4 = grid.positions[p4];
-
-    //     Self::insert_vertices([&pos_1, &pos_4, &pos_3], vertices, indices, vertex_index);
-    //     Self::insert_vertices([&pos_2, &pos_1, &pos_3], vertices, indices, vertex_index);
-    // }
-
     fn square(
         &self,
         grid: &Grid,
@@ -574,12 +558,13 @@ impl GridLayer {
         i: u32,
         j: u32,
     ) {
-        println!("sq i: {}, j: {}", i, j);
-        let mut width = 0;
-        let mut height = 0;
+        // println!("sq i: {}, j: {}", i, j);
+        let mut width = 1;
+        let mut height = 1;
+
         let mut new_i = i + 1;
         let mut next_iso = self.calculate_iso(grid, new_i, j);
-        while next_iso != 15
+        while next_iso == 15
             && new_i < (grid.width - 2)
             && !quads[(new_i + j * grid.width) as usize]
         {
@@ -588,16 +573,11 @@ impl GridLayer {
             next_iso = self.calculate_iso(grid, new_i, j);
         }
         // println!("width: {}", width);
-        // println!("new_j: {}", new_j);
         let mut new_j = j + 1;
         next_iso = self.calculate_iso(grid, new_i, new_j);
-        while next_iso != 15
-            && new_i < (grid.height - 2)
-            && !quads[(new_j + new_i * grid.width) as usize]
-        {
+        while next_iso == 15 && new_j < (grid.height - 2) {
             new_i = i;
-            while next_iso != 15
-                // && new_j < (grid.width - 1)
+            while next_iso == 15
                 && !quads[(new_i + new_j * grid.width) as usize]
                 && new_i < i + width
             {
@@ -609,20 +589,23 @@ impl GridLayer {
             }
             new_j += 1;
             height += 1;
+            if new_j >= (grid.height - 2) {
+                break;
+            }
             next_iso = self.calculate_iso(grid, new_i, new_j);
             // println!("i: {}, j: {}, iso: {}", new_i, new_j, next_iso);
         }
         // println!("height: {}", height);
-        for h in 0..width {
-            for w in 0..height {
+        for h in 0..height {
+            for w in 0..width {
                 quads[(i + w + (j + h) * grid.width) as usize] = true;
             }
         }
 
         let p1 = (i + j * grid.width) as usize;
-        let p2 = ((i + width) + j * grid.width + 1) as usize;
-        let p3 = ((i + width) + (j + height + 1) * grid.width + 1) as usize;
-        let p4 = (i + (j + height + 1) * grid.width) as usize;
+        let p2 = (i + width + j * grid.width) as usize;
+        let p3 = (i + width + (j + height) * grid.width) as usize;
+        let p4 = (i + (j + height) * grid.width) as usize;
 
         let pos_1 = grid.positions[p1];
         let pos_2 = grid.positions[p2];
@@ -634,7 +617,10 @@ impl GridLayer {
     }
 
     fn calculate_iso(&self, grid: &Grid, i: u32, j: u32) -> u8 {
-        println!("i: {}, j: {}", i, j);
+        if i >= grid.width - 2 || j > grid.height - 2 {
+            return 0;
+        }
+        // println!("i: {}, j: {}", i, j);
         let a = (i + j * grid.width) as usize;
         let b = (i + j * grid.width + 1) as usize;
         let c = (i + (j + 1) * grid.width + 1) as usize;
@@ -650,6 +636,7 @@ impl GridLayer {
         iso_value |= (b_val as u8) << 2;
         iso_value |= (c_val as u8) << 1;
         iso_value |= d_val as u8;
+        // println!("iso: {}", iso_value);
         iso_value
     }
 }
