@@ -21,58 +21,58 @@ pub fn setup(mut commands: Commands) {
         })
         .insert(Radius { r: 5.0 })
         .insert(Veclocity {
-            vel: Vec2::new(0.05, 0.02),
+            vel: Vec2::new(0.1, -0.4),
         });
-    // commands
-    //     .spawn()
-    //     .insert(Ball)
-    //     .insert(Position {
-    //         pos: Vec2::new(20.0, 0.0),
-    //     })
-    //     .insert(Radius { r: 2.0 })
-    //     .insert(Veclocity {
-    //         vel: Vec2::new(-0.03, 0.01),
-    //     });
-    // commands
-    //     .spawn()
-    //     .insert(Ball)
-    //     .insert(Position {
-    //         pos: Vec2::new(20.0, 20.0),
-    //     })
-    //     .insert(Radius { r: 3.0 })
-    //     .insert(Veclocity {
-    //         vel: Vec2::new(-0.02, 0.03),
-    //     });
-    // commands
-    //     .spawn()
-    //     .insert(Ball)
-    //     .insert(Position {
-    //         pos: Vec2::new(25.0, 25.0),
-    //     })
-    //     .insert(Radius { r: 25.0 })
-    //     .insert(Veclocity {
-    //         vel: Vec2::new(4.0, 3.0),
-    //     });
-    // commands
-    //     .spawn()
-    //     .insert(Ball)
-    //     .insert(Position {
-    //         pos: Vec2::new(22.0, 202.0),
-    //     })
-    //     .insert(Radius { r: 22.0 })
-    //     .insert(Veclocity {
-    //         vel: Vec2::new(5.0, -6.0),
-    //     });
-    // commands
-    //     .spawn()
-    //     .insert(Ball)
-    //     .insert(Position {
-    //         pos: Vec2::new(20.0, 20.0),
-    //     })
-    //     .insert(Radius { r: 10.0 })
-    //     .insert(Veclocity {
-    //         vel: Vec2::new(-3.0, 3.0),
-    //     });
+    commands
+        .spawn()
+        .insert(Ball)
+        .insert(Position {
+            pos: Vec2::new(20.0, 0.0),
+        })
+        .insert(Radius { r: 2.0 })
+        .insert(Veclocity {
+            vel: Vec2::new(-0.3, 0.1),
+        });
+    commands
+        .spawn()
+        .insert(Ball)
+        .insert(Position {
+            pos: Vec2::new(30.0, 30.0),
+        })
+        .insert(Radius { r: 3.0 })
+        .insert(Veclocity {
+            vel: Vec2::new(-0.2, 0.3),
+        });
+    commands
+        .spawn()
+        .insert(Ball)
+        .insert(Position {
+            pos: Vec2::new(25.0, 25.0),
+        })
+        .insert(Radius { r: 1.4 })
+        .insert(Veclocity {
+            vel: Vec2::new(0.87, 1.111),
+        });
+    commands
+        .spawn()
+        .insert(Ball)
+        .insert(Position {
+            pos: Vec2::new(22.0, 202.0),
+        })
+        .insert(Radius { r: 2.1 })
+        .insert(Veclocity {
+            vel: Vec2::new(0.5, -0.2),
+        });
+    commands
+        .spawn()
+        .insert(Ball)
+        .insert(Position {
+            pos: Vec2::new(20.0, 20.0),
+        })
+        .insert(Radius { r: 1.2 })
+        .insert(Veclocity {
+            vel: Vec2::new(-1.1, 0.9),
+        });
 }
 
 pub fn update_balls(grid: Res<Grid>, mut q: Query<(&mut Position, &mut Veclocity), With<Ball>>) {

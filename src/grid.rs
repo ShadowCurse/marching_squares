@@ -19,13 +19,13 @@ pub fn setup(
     let grid = Grid::new(width, height, spacing);
     commands.insert_resource(grid);
 
-    let thresholds = [0.2]; //, 0.1, 0.05, 0.04, 0.03];
+    let thresholds = [0.2, 0.1, 0.05, 0.04, 0.03];
     let colors = [
         Color::ORANGE,
-        // Color::GREEN,
-        // Color::BLUE,
-        // Color::CYAN,
-        // Color::TEAL,
+        Color::GREEN,
+        Color::BLUE,
+        Color::CYAN,
+        Color::TEAL,
     ];
 
     for (i, (t, c)) in thresholds
@@ -153,13 +153,6 @@ impl GridLayer {
         for (i, val) in grid.values.iter().enumerate() {
             self.values_normalize[i] = val > &self.threshold;
         }
-        // for i in 0..grid.width - 40 {
-        //     self.values_normalize[(i + 50 * grid.width) as usize] = true;
-        //     self.values_normalize[(i + 1 + 51 * grid.width) as usize] = true;
-        //     self.values_normalize[(i + 2 + 52 * grid.width) as usize] = true;
-        //     self.values_normalize[(i + 3 + 53 * grid.width) as usize] = true;
-        //     self.values_normalize[(i + 4 + 54 * grid.width) as usize] = true;
-        // }
 
         let mut vertex_index = BTreeMap::<CmpVec3, u32>::new();
         let mut vertices = vec![];
@@ -359,17 +352,10 @@ impl GridLayer {
                         );
                     }
 
-                    _ => {} // _ => unreachable!(),
+                    _ => unreachable!(),
                 }
             }
         }
-        // println!("vertices: {:#?}", vertices.len());
-        // println!("indices: {:#?}", indices.len());
-        // println!("vertex_index: {:#?}", vertex_index.len());
-        // println!("vertices: {:#?}", vertices);
-        // println!("indices: {:#?}", indices);
-        // println!("vertex_index: {:#?}", vertex_index);
-
         let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
         mesh.set_attribute(
             Mesh::ATTRIBUTE_NORMAL,
@@ -558,7 +544,6 @@ impl GridLayer {
         i: u32,
         j: u32,
     ) {
-        // println!("sq i: {}, j: {}", i, j);
         let mut width = 1;
         let mut height = 1;
 
@@ -572,9 +557,8 @@ impl GridLayer {
             new_i += 1;
             next_iso = self.calculate_iso(grid, new_i, j);
         }
-        // println!("width: {}", width);
         let mut new_j = j + 1;
-        next_iso = self.calculate_iso(grid, new_i, new_j);
+        next_iso = self.calculate_iso(grid, i, new_j);
         while next_iso == 15 && new_j < (grid.height - 2) {
             new_i = i;
             while next_iso == 15
@@ -589,13 +573,8 @@ impl GridLayer {
             }
             new_j += 1;
             height += 1;
-            if new_j >= (grid.height - 2) {
-                break;
-            }
-            next_iso = self.calculate_iso(grid, new_i, new_j);
-            // println!("i: {}, j: {}, iso: {}", new_i, new_j, next_iso);
+            next_iso = self.calculate_iso(grid, i, new_j);
         }
-        // println!("height: {}", height);
         for h in 0..height {
             for w in 0..width {
                 quads[(i + w + (j + h) * grid.width) as usize] = true;
@@ -620,7 +599,6 @@ impl GridLayer {
         if i >= grid.width - 2 || j > grid.height - 2 {
             return 0;
         }
-        // println!("i: {}, j: {}", i, j);
         let a = (i + j * grid.width) as usize;
         let b = (i + j * grid.width + 1) as usize;
         let c = (i + (j + 1) * grid.width + 1) as usize;
@@ -636,7 +614,6 @@ impl GridLayer {
         iso_value |= (b_val as u8) << 2;
         iso_value |= (c_val as u8) << 1;
         iso_value |= d_val as u8;
-        // println!("iso: {}", iso_value);
         iso_value
     }
 }
