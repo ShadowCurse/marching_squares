@@ -5,88 +5,22 @@ use bevy::render::{
 };
 use std::collections::BTreeMap;
 
-use crate::metaballs::*;
-
-pub fn setup(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut standart_materials: ResMut<Assets<StandardMaterial>>,
-) {
-    let spacing = 0.5;
-    let width = 200;
-    let height = 200;
-
-    let grid = Grid::new(width, height, spacing);
-    commands.insert_resource(grid);
-
-    let thresholds = [0.2, 0.1, 0.05, 0.04, 0.03];
-    let colors = [
-        Color::ORANGE,
-        Color::GREEN,
-        Color::BLUE,
-        Color::CYAN,
-        Color::TEAL,
-    ];
-
-    for (i, (t, c)) in thresholds
-        .into_iter()
-        .zip(colors.into_iter())
-        .rev()
-        .enumerate()
-    {
-        commands
-            .spawn_bundle(PbrBundle {
-                material: standart_materials.add(c.into()),
-                mesh: meshes.add(Mesh::new(PrimitiveTopology::TriangleList)),
-                transform: Transform::from_translation(Vec3::new(0.0, 0.0, 5.0 * i as f32)),
-                ..Default::default()
-            })
-            .insert(GridLayer {
-                threshold: t,
-                values_normalize: vec![false; (width * height) as usize],
-            });
-    }
-}
-
-pub fn update_mesh(
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut grid: ResMut<Grid>,
-    balls: Query<(&Position, &Radius), With<Ball>>,
-    mut layers: Query<(&mut GridLayer, &Handle<Mesh>)>,
-) {
-    grid.update(&|x, y| {
-        balls
-            .iter()
-            .fold(0.0, |sum, (p, r)| sum + Ball::calc(&p.pos, r.r, x, y))
-    });
-    for (mut l, h) in layers.iter_mut() {
-        l.update(&grid, h.clone(), &mut meshes);
-    }
-}
-
-pub struct GridLayer {
-    pub threshold: f32,
-    pub values_normalize: Vec<bool>,
-}
-
-pub struct Grid {
+pub struct ValuePlain {
     pub width: u32,
     pub height: u32,
-    pub spacing: f32,
     pub positions: Vec<Vec3>,
     pub values: Vec<f32>,
 }
 
-impl Grid {
-    pub fn new(width: u32, height: u32, spacing: f32) -> Self {
+impl ValuePlain {
+    pub fn new(width: u32, height: u32) -> Self {
         let total_points = width * height;
         let mut positions = Vec::with_capacity(total_points as usize);
         let half_width = (width / 2) as i32;
         let half_height = (height / 2) as i32;
         for y in (-half_height..half_height).rev() {
             for x in -half_width..half_width {
-                let position =
-                    (Vec3::new(x as f32, y as f32, 0.0) + Vec3::new(0.5, 0.5, 0.0)) * spacing;
+                let position = Vec3::new(x as f32, y as f32, 0.0) + Vec3::new(0.5, 0.5, 0.0);
                 positions.push(position);
             }
         }
@@ -95,7 +29,6 @@ impl Grid {
         Self {
             width,
             height,
-            spacing,
             positions,
             values,
         }
@@ -107,6 +40,7 @@ impl Grid {
         }
     }
 }
+
 #[derive(Debug)]
 struct CmpVec3(Vec3);
 impl CmpVec3 {
@@ -114,12 +48,15 @@ impl CmpVec3 {
         Self(vec)
     }
 }
+
 impl PartialEq<CmpVec3> for CmpVec3 {
     fn eq(&self, other: &CmpVec3) -> bool {
         self.0.eq(&other.0)
     }
 }
+
 impl Eq for CmpVec3 {}
+
 impl PartialOrd<CmpVec3> for CmpVec3 {
     fn partial_cmp(&self, other: &CmpVec3) -> Option<std::cmp::Ordering> {
         if self.eq(&other) {
@@ -137,45 +74,61 @@ impl PartialOrd<CmpVec3> for CmpVec3 {
         }
     }
 }
+
 impl Ord for CmpVec3 {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.partial_cmp(other).unwrap()
     }
 }
 
-impl GridLayer {
-    pub fn update(
+pub struct ThresholdLayer {
+    pub threshold: f32,
+    pub normalized_values: Vec<bool>,
+}
+
+impl ThresholdLayer {
+    pub fn new(width: u32, height: u32, threshold: f32) -> Self {
+        Self {
+            threshold,
+            normalized_values: vec![false; (width * height) as usize],
+        }
+    }
+    pub fn update_values(&mut self, grid: &ValuePlain) {
+        for (n, v) in self.normalized_values.iter_mut().zip(grid.values.iter()) {
+            *n = v > &self.threshold;
+        }
+    }
+
+    pub fn update_mesh(
         &mut self,
-        grid: &Grid,
+        plain: &ValuePlain,
         mesh_handle: Handle<Mesh>,
         meshes: &mut ResMut<Assets<Mesh>>,
     ) {
-        for (i, val) in grid.values.iter().enumerate() {
-            self.values_normalize[i] = val > &self.threshold;
-        }
+        self.update_values(plain);
 
         let mut vertex_index = BTreeMap::<CmpVec3, u32>::new();
         let mut vertices = vec![];
         let mut indices = vec![];
 
-        let quad_amount = (grid.width) * (grid.height);
+        let quad_amount = (plain.width) * (plain.height);
         let mut quads = vec![false; quad_amount as usize];
 
-        for j in 0..(grid.height - 1) {
-            for i in 0..(grid.width - 1) {
-                let a = (i + j * grid.width) as usize;
+        for j in 0..(plain.height - 1) {
+            for i in 0..(plain.width - 1) {
+                let a = (i + j * plain.width) as usize;
                 if quads[a] {
                     continue;
                 }
-                let b = (i + j * grid.width + 1) as usize;
-                let c = (i + (j + 1) * grid.width + 1) as usize;
-                let d = (i + (j + 1) * grid.width) as usize;
+                let b = (i + j * plain.width + 1) as usize;
+                let c = (i + (j + 1) * plain.width + 1) as usize;
+                let d = (i + (j + 1) * plain.width) as usize;
 
-                match self.calculate_iso(grid, i, j) {
+                match self.calculate_iso(plain, i, j) {
                     0 => {}
                     1 => {
                         Self::corner(
-                            grid,
+                            plain,
                             &mut vertices,
                             &mut indices,
                             &mut vertex_index,
@@ -186,7 +139,7 @@ impl GridLayer {
                     }
                     2 => {
                         Self::corner(
-                            grid,
+                            plain,
                             &mut vertices,
                             &mut indices,
                             &mut vertex_index,
@@ -197,7 +150,7 @@ impl GridLayer {
                     }
                     4 => {
                         Self::corner(
-                            grid,
+                            plain,
                             &mut vertices,
                             &mut indices,
                             &mut vertex_index,
@@ -208,7 +161,7 @@ impl GridLayer {
                     }
                     8 => {
                         Self::corner(
-                            grid,
+                            plain,
                             &mut vertices,
                             &mut indices,
                             &mut vertex_index,
@@ -220,7 +173,7 @@ impl GridLayer {
 
                     7 => {
                         Self::no_corner(
-                            grid,
+                            plain,
                             &mut vertices,
                             &mut indices,
                             &mut vertex_index,
@@ -232,7 +185,7 @@ impl GridLayer {
                     }
                     11 => {
                         Self::no_corner(
-                            grid,
+                            plain,
                             &mut vertices,
                             &mut indices,
                             &mut vertex_index,
@@ -244,7 +197,7 @@ impl GridLayer {
                     }
                     13 => {
                         Self::no_corner(
-                            grid,
+                            plain,
                             &mut vertices,
                             &mut indices,
                             &mut vertex_index,
@@ -256,7 +209,7 @@ impl GridLayer {
                     }
                     14 => {
                         Self::no_corner(
-                            grid,
+                            plain,
                             &mut vertices,
                             &mut indices,
                             &mut vertex_index,
@@ -269,7 +222,7 @@ impl GridLayer {
 
                     3 => {
                         Self::split(
-                            grid,
+                            plain,
                             &mut vertices,
                             &mut indices,
                             &mut vertex_index,
@@ -281,7 +234,7 @@ impl GridLayer {
                     }
                     6 => {
                         Self::split(
-                            grid,
+                            plain,
                             &mut vertices,
                             &mut indices,
                             &mut vertex_index,
@@ -293,7 +246,7 @@ impl GridLayer {
                     }
                     9 => {
                         Self::split(
-                            grid,
+                            plain,
                             &mut vertices,
                             &mut indices,
                             &mut vertex_index,
@@ -305,7 +258,7 @@ impl GridLayer {
                     }
                     12 => {
                         Self::split(
-                            grid,
+                            plain,
                             &mut vertices,
                             &mut indices,
                             &mut vertex_index,
@@ -318,7 +271,7 @@ impl GridLayer {
 
                     5 => {
                         Self::diagonal(
-                            grid,
+                            plain,
                             &mut vertices,
                             &mut indices,
                             &mut vertex_index,
@@ -330,7 +283,7 @@ impl GridLayer {
                     }
                     10 => {
                         Self::diagonal(
-                            grid,
+                            plain,
                             &mut vertices,
                             &mut indices,
                             &mut vertex_index,
@@ -342,7 +295,7 @@ impl GridLayer {
                     }
                     15 => {
                         self.square(
-                            grid,
+                            plain,
                             &mut vertices,
                             &mut indices,
                             &mut vertex_index,
@@ -389,7 +342,7 @@ impl GridLayer {
     }
 
     fn corner(
-        grid: &Grid,
+        plain: &ValuePlain,
         vertices: &mut Vec<[f32; 3]>,
         indices: &mut Vec<u32>,
         vertex_index: &mut BTreeMap<CmpVec3, u32>,
@@ -397,13 +350,13 @@ impl GridLayer {
         p2: usize,
         p3: usize,
     ) {
-        let pos_1 = grid.positions[p1];
-        let pos_2 = grid.positions[p2];
-        let pos_3 = grid.positions[p3];
+        let pos_1 = plain.positions[p1];
+        let pos_2 = plain.positions[p2];
+        let pos_3 = plain.positions[p3];
 
-        let val_1 = grid.values[p1];
-        let val_2 = grid.values[p2];
-        let val_3 = grid.values[p3];
+        let val_1 = plain.values[p1];
+        let val_2 = plain.values[p2];
+        let val_3 = plain.values[p3];
 
         let intersection_1 = pos_1.lerp(pos_2, val_2 / (val_1 + val_2));
         let intersection_2 = pos_2.lerp(pos_3, val_3 / (val_2 + val_3));
@@ -417,7 +370,7 @@ impl GridLayer {
     }
 
     fn no_corner(
-        grid: &Grid,
+        plain: &ValuePlain,
         vertices: &mut Vec<[f32; 3]>,
         indices: &mut Vec<u32>,
         vertex_index: &mut BTreeMap<CmpVec3, u32>,
@@ -426,14 +379,14 @@ impl GridLayer {
         p3: usize,
         p4: usize,
     ) {
-        let pos_1 = grid.positions[p1];
-        let pos_2 = grid.positions[p2];
-        let pos_3 = grid.positions[p3];
-        let pos_4 = grid.positions[p4];
+        let pos_1 = plain.positions[p1];
+        let pos_2 = plain.positions[p2];
+        let pos_3 = plain.positions[p3];
+        let pos_4 = plain.positions[p4];
 
-        let val_1 = grid.values[p1];
-        let val_2 = grid.values[p2];
-        let val_4 = grid.values[p4];
+        let val_1 = plain.values[p1];
+        let val_2 = plain.values[p2];
+        let val_4 = plain.values[p4];
 
         let intersection_1 = pos_1.lerp(pos_2, val_2 / (val_1 + val_2));
         let intersection_2 = pos_1.lerp(pos_4, val_4 / (val_1 + val_4));
@@ -459,7 +412,7 @@ impl GridLayer {
     }
 
     fn split(
-        grid: &Grid,
+        plain: &ValuePlain,
         vertices: &mut Vec<[f32; 3]>,
         indices: &mut Vec<u32>,
         vertex_index: &mut BTreeMap<CmpVec3, u32>,
@@ -468,15 +421,15 @@ impl GridLayer {
         p3: usize,
         p4: usize,
     ) {
-        let pos_1 = grid.positions[p1];
-        let pos_2 = grid.positions[p2];
-        let pos_3 = grid.positions[p3];
-        let pos_4 = grid.positions[p4];
+        let pos_1 = plain.positions[p1];
+        let pos_2 = plain.positions[p2];
+        let pos_3 = plain.positions[p3];
+        let pos_4 = plain.positions[p4];
 
-        let val_1 = grid.values[p1];
-        let val_2 = grid.values[p2];
-        let val_3 = grid.values[p3];
-        let val_4 = grid.values[p4];
+        let val_1 = plain.values[p1];
+        let val_2 = plain.values[p2];
+        let val_3 = plain.values[p3];
+        let val_4 = plain.values[p4];
 
         let intersection_1 = pos_1.lerp(pos_4, val_4 / (val_1 + val_4));
         let intersection_2 = pos_2.lerp(pos_3, val_3 / (val_2 + val_3));
@@ -496,7 +449,7 @@ impl GridLayer {
     }
 
     fn diagonal(
-        grid: &Grid,
+        plain: &ValuePlain,
         vertices: &mut Vec<[f32; 3]>,
         indices: &mut Vec<u32>,
         vertex_index: &mut BTreeMap<CmpVec3, u32>,
@@ -505,15 +458,15 @@ impl GridLayer {
         p3: usize,
         p4: usize,
     ) {
-        let pos_1 = grid.positions[p1];
-        let pos_2 = grid.positions[p2];
-        let pos_3 = grid.positions[p3];
-        let pos_4 = grid.positions[p4];
+        let pos_1 = plain.positions[p1];
+        let pos_2 = plain.positions[p2];
+        let pos_3 = plain.positions[p3];
+        let pos_4 = plain.positions[p4];
 
-        let val_1 = grid.values[p1];
-        let val_2 = grid.values[p2];
-        let val_3 = grid.values[p3];
-        let val_4 = grid.values[p4];
+        let val_1 = plain.values[p1];
+        let val_2 = plain.values[p2];
+        let val_3 = plain.values[p3];
+        let val_4 = plain.values[p4];
 
         let intersection_1 = pos_1.lerp(pos_2, val_2 / (val_1 + val_2));
         let intersection_2 = pos_2.lerp(pos_3, val_3 / (val_2 + val_3));
@@ -536,7 +489,7 @@ impl GridLayer {
 
     fn square(
         &self,
-        grid: &Grid,
+        plain: &ValuePlain,
         vertices: &mut Vec<[f32; 3]>,
         indices: &mut Vec<u32>,
         vertex_index: &mut BTreeMap<CmpVec3, u32>,
@@ -548,66 +501,66 @@ impl GridLayer {
         let mut height = 1;
 
         let mut new_i = i + 1;
-        let mut next_iso = self.calculate_iso(grid, new_i, j);
+        let mut next_iso = self.calculate_iso(plain, new_i, j);
         while next_iso == 15
-            && new_i < (grid.width - 2)
-            && !quads[(new_i + j * grid.width) as usize]
+            && new_i < (plain.width - 2)
+            && !quads[(new_i + j * plain.width) as usize]
         {
             width += 1;
             new_i += 1;
-            next_iso = self.calculate_iso(grid, new_i, j);
+            next_iso = self.calculate_iso(plain, new_i, j);
         }
         let mut new_j = j + 1;
-        next_iso = self.calculate_iso(grid, i, new_j);
-        while next_iso == 15 && new_j < (grid.height - 2) {
+        next_iso = self.calculate_iso(plain, i, new_j);
+        while next_iso == 15 && new_j < (plain.height - 2) {
             new_i = i;
             while next_iso == 15
-                && !quads[(new_i + new_j * grid.width) as usize]
+                && !quads[(new_i + new_j * plain.width) as usize]
                 && new_i < i + width
             {
                 new_i += 1;
-                next_iso = self.calculate_iso(grid, new_i, new_j);
+                next_iso = self.calculate_iso(plain, new_i, new_j);
             }
             if new_i - i != width {
                 break;
             }
             new_j += 1;
             height += 1;
-            next_iso = self.calculate_iso(grid, i, new_j);
+            next_iso = self.calculate_iso(plain, i, new_j);
         }
         for h in 0..height {
             for w in 0..width {
-                quads[(i + w + (j + h) * grid.width) as usize] = true;
+                quads[(i + w + (j + h) * plain.width) as usize] = true;
             }
         }
 
-        let p1 = (i + j * grid.width) as usize;
-        let p2 = (i + width + j * grid.width) as usize;
-        let p3 = (i + width + (j + height) * grid.width) as usize;
-        let p4 = (i + (j + height) * grid.width) as usize;
+        let p1 = (i + j * plain.width) as usize;
+        let p2 = (i + width + j * plain.width) as usize;
+        let p3 = (i + width + (j + height) * plain.width) as usize;
+        let p4 = (i + (j + height) * plain.width) as usize;
 
-        let pos_1 = grid.positions[p1];
-        let pos_2 = grid.positions[p2];
-        let pos_3 = grid.positions[p3];
-        let pos_4 = grid.positions[p4];
+        let pos_1 = plain.positions[p1];
+        let pos_2 = plain.positions[p2];
+        let pos_3 = plain.positions[p3];
+        let pos_4 = plain.positions[p4];
 
         Self::insert_vertices([&pos_1, &pos_4, &pos_3], vertices, indices, vertex_index);
         Self::insert_vertices([&pos_2, &pos_1, &pos_3], vertices, indices, vertex_index);
     }
 
-    fn calculate_iso(&self, grid: &Grid, i: u32, j: u32) -> u8 {
-        if i >= grid.width - 2 || j > grid.height - 2 {
+    fn calculate_iso(&self, plain: &ValuePlain, i: u32, j: u32) -> u8 {
+        if i >= plain.width - 2 || j > plain.height - 2 {
             return 0;
         }
-        let a = (i + j * grid.width) as usize;
-        let b = (i + j * grid.width + 1) as usize;
-        let c = (i + (j + 1) * grid.width + 1) as usize;
-        let d = (i + (j + 1) * grid.width) as usize;
+        let a = (i + j * plain.width) as usize;
+        let b = (i + j * plain.width + 1) as usize;
+        let c = (i + (j + 1) * plain.width + 1) as usize;
+        let d = (i + (j + 1) * plain.width) as usize;
 
-        let a_val = self.values_normalize[a];
-        let b_val = self.values_normalize[b];
-        let c_val = self.values_normalize[c];
-        let d_val = self.values_normalize[d];
+        let a_val = self.normalized_values[a];
+        let b_val = self.normalized_values[b];
+        let c_val = self.normalized_values[c];
+        let d_val = self.normalized_values[d];
 
         let mut iso_value = 0;
         iso_value |= (a_val as u8) << 3;

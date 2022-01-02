@@ -1,4 +1,3 @@
-use crate::grid::Grid;
 use bevy::prelude::*;
 
 pub struct Ball;
@@ -73,20 +72,6 @@ pub fn setup(mut commands: Commands) {
         .insert(Veclocity {
             vel: Vec2::new(-1.1, 0.9),
         });
-}
-
-pub fn update_balls(grid: Res<Grid>, mut q: Query<(&mut Position, &mut Veclocity), With<Ball>>) {
-    let half_width = grid.width as f32 * grid.spacing * 0.5;
-    let half_height = grid.height as f32 * grid.spacing * 0.5;
-    for (mut pos, mut vel) in q.iter_mut() {
-        pos.pos += vel.vel;
-        if pos.pos.x > half_width || pos.pos.x < -half_width {
-            vel.vel.x *= -1.0;
-        }
-        if pos.pos.y > half_height || pos.pos.y < -half_height {
-            vel.vel.y *= -1.0;
-        }
-    }
 }
 
 impl Ball {

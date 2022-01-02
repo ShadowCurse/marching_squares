@@ -1,6 +1,6 @@
 // use crate::vec3::{Point3, Vec3};
 use bevy::math::Vec3;
-type Point3 = Vec3;
+pub type Point3 = Vec3;
 
 const PERLIN_POINT_COUNT: u32 = 256;
 
