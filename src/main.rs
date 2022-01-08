@@ -3,9 +3,12 @@ use bevy::render::pipeline::PrimitiveTopology;
 
 mod ball;
 mod value_plain;
+mod threshold_layer;
+mod marching_squares;
 
 use crate::ball::*;
 use crate::value_plain::*;
+use crate::threshold_layer::*;
 
 fn main() {
     App::build()
@@ -118,7 +121,7 @@ pub fn update_layers(
 ) {
     if let Some(plain) = plain.iter().next() {
         for (mut l, h) in layers.iter_mut() {
-            l.update_mesh(&plain, h.clone(), &mut meshes);
+            l.update_mesh(plain, h.clone(), &mut meshes);
         }
     }
 }
