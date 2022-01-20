@@ -1,12 +1,17 @@
 use bevy::prelude::*;
 
+#[derive(Debug, Default, Component)]
 pub struct Ball;
+
+#[derive(Debug, Default, Component)]
 pub struct Position {
     pub pos: Vec2,
 }
+#[derive(Debug, Default, Component)]
 pub struct Radius {
     pub r: f32,
 }
+#[derive(Debug, Default, Component)]
 pub struct Veclocity {
     pub vel: Vec2,
 }

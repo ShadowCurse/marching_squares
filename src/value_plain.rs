@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 
+#[derive(Debug, Default, Component)]
 pub struct ValuePlain {
     pub width: u32,
     pub height: u32,

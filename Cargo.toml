@@ -10,5 +10,5 @@ default = ["dynamic"]
 dynamic = ["bevy/dynamic"]
 
 [dependencies]
-bevy = { version = "0.5.0" }
+bevy = { version = "0.6.0" }
 rand = "0.8.4"

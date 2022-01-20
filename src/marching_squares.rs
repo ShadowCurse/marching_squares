@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy::render::{
     mesh::{Indices, Mesh},
-    pipeline::PrimitiveTopology,
+    render_resource::PrimitiveTopology,
 };
 use std::collections::BTreeMap;
 
@@ -24,8 +24,8 @@ impl PartialEq<CmpVec3> for CmpVec3 {
 
 impl Eq for CmpVec3 {}
 
-impl PartialOrd<CmpVec3> for CmpVec3 {
-    fn partial_cmp(&self, other: &CmpVec3) -> Option<std::cmp::Ordering> {
+impl PartialOrd<Self> for CmpVec3 {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         if self.eq(other) {
             Some(std::cmp::Ordering::Equal)
         } else if self.0.x > other.0.x || self.0.y > other.0.y || self.0.z > other.0.z {

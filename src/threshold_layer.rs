@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use crate::value_plain::ValuePlain;
 use crate::marching_squares::MarchingSquares;
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Component)]
 pub struct ThresholdLayer {
     pub threshold: f32,
     pub normalized_values: Vec<bool>,

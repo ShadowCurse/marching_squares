@@ -1,17 +1,17 @@
 use bevy::prelude::*;
-use bevy::render::pipeline::PrimitiveTopology;
+use bevy::render::render_resource::PrimitiveTopology;
 
 mod ball;
 mod value_plain;
 mod threshold_layer;
 mod marching_squares;
 
-use crate::ball::*;
-use crate::value_plain::*;
-use crate::threshold_layer::*;
+use crate::ball::{Ball, Position, Radius, Veclocity};
+use crate::value_plain::ValuePlain;
+use crate::threshold_layer::ThresholdLayer;
 
 fn main() {
-    App::build()
+    App::new()
         .insert_resource(Msaa { samples: 4 })
         .add_plugins(DefaultPlugins)
         .add_startup_system(setup.system())
@@ -28,8 +28,8 @@ fn setup(mut commands: Commands) {
     let mut camera = PerspectiveCameraBundle::new_3d();
     camera.transform = Transform::from_xyz(100.0, 0.0, 200.0).looking_at(Vec3::ZERO, Vec3::Y);
     commands.spawn_bundle(camera);
-    commands.spawn_bundle(LightBundle {
-        light: Light {
+    commands.spawn_bundle(PointLightBundle {
+        point_light: PointLight {
             intensity: 1000.0,
             range: 1000.0,
             ..Default::default()
@@ -58,6 +58,7 @@ pub fn update_balls(
     }
 }
 
+#[derive(Debug, Default, Component)]
 pub struct MetaballsPlain;
 
 pub fn setup_plain_and_layers(
