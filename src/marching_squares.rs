@@ -123,12 +123,12 @@ impl MarchingSquares {
             }
         }
         let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
-        mesh.set_attribute(
+        mesh.insert_attribute(
             Mesh::ATTRIBUTE_NORMAL,
             vec![[0.0, 0.0, 1.0]; self.vertices.len()],
         );
-        mesh.set_attribute(Mesh::ATTRIBUTE_UV_0, vec![[0.0, 0.0]; self.vertices.len()]);
-        mesh.set_attribute(Mesh::ATTRIBUTE_POSITION, self.vertices);
+        mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, vec![[0.0, 0.0]; self.vertices.len()]);
+        mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, self.vertices);
         mesh.set_indices(Some(Indices::U32(self.indices)));
         mesh
     }

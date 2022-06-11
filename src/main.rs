@@ -2,25 +2,26 @@ use bevy::prelude::*;
 use bevy::render::render_resource::PrimitiveTopology;
 
 mod ball;
-mod value_plain;
-mod threshold_layer;
 mod marching_squares;
+mod threshold_layer;
+mod value_plain;
 
 use crate::ball::{Ball, Position, Radius, Veclocity};
-use crate::value_plain::ValuePlain;
 use crate::threshold_layer::ThresholdLayer;
+use crate::value_plain::ValuePlain;
 
 fn main() {
     App::new()
         .insert_resource(Msaa { samples: 4 })
+        .insert_resource(ClearColor(Color::rgb_u8(69, 69, 69)))
         .add_plugins(DefaultPlugins)
-        .add_startup_system(setup.system())
-        .add_startup_system(ball::setup.system())
-        .add_startup_system(setup_plain_and_layers.system())
-        .add_system(update_balls.system())
-        .add_system(update_plain.system())
-        .add_system(update_layers.system())
-        .add_system(camera_movement.system())
+        .add_startup_system(setup)
+        .add_startup_system(ball::setup)
+        .add_startup_system(setup_plain_and_layers)
+        .add_system(update_balls)
+        .add_system(update_plain)
+        .add_system(update_layers)
+        .add_system(camera_movement)
         .run();
 }
 
@@ -28,13 +29,11 @@ fn setup(mut commands: Commands) {
     let mut camera = PerspectiveCameraBundle::new_3d();
     camera.transform = Transform::from_xyz(100.0, 0.0, 200.0).looking_at(Vec3::ZERO, Vec3::Y);
     commands.spawn_bundle(camera);
-    commands.spawn_bundle(PointLightBundle {
-        point_light: PointLight {
-            intensity: 1000.0,
-            range: 1000.0,
+    commands.spawn_bundle(DirectionalLightBundle {
+        directional_light: DirectionalLight {
+            illuminance: 1000.0,
             ..Default::default()
         },
-        transform: Transform::from_xyz(0.0, 0.0, 50.0),
         ..Default::default()
     });
 }
@@ -66,8 +65,8 @@ pub fn setup_plain_and_layers(
     mut meshes: ResMut<Assets<Mesh>>,
     mut standart_materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    let width = 200;
-    let height = 200;
+    let width = 100;
+    let height = 100;
 
     commands
         .spawn()
@@ -76,11 +75,11 @@ pub fn setup_plain_and_layers(
 
     let thresholds = [0.2, 0.1, 0.05, 0.04, 0.03];
     let colors = [
-        Color::ORANGE,
-        Color::GREEN,
-        Color::BLUE,
-        Color::CYAN,
-        Color::TEAL,
+        Color::rgb_u8(250, 110, 229),
+        Color::rgb_u8(198, 95, 194),
+        Color::rgb_u8(146, 80, 159),
+        Color::rgb_u8(94, 65, 123),
+        Color::rgb_u8(42, 50, 88),
     ];
 
     for (i, (t, c)) in thresholds
